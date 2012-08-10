@@ -12,7 +12,8 @@
             self.__mapper__.add_properties({ elem : relationship(rel_model.__mapper__) })
         
     def find_by(self, att, val, first=True):
-        mstr = "self.session.query(Base" + self.__class__.__name__ +").filter_by(" + str(att) + "=val)"
+        #mstr = "self.session.query(Base" + self.__class__.__name__ +").filter_by(" + str(att) + "=val)"
+        mstr = "self.session.query(Base" + self.modelname+").filter_by(" + str(att) + "=val)"
         if first == True:
             mstr += ".first()"
         print " -- ", mstr
@@ -21,7 +22,7 @@
         return res
 
     def find_all(self):
-        mstr = "self.session.query(Base" + self.__class__.__name__ + ").all()"
+        mstr = "self.session.query(Base" + self.modelname + ").all()"
         print " -- ", mstr
         res= eval(mstr)
         #for elem in res:
@@ -29,7 +30,7 @@
         return res
     
     def find_first(self):
-        mstr = "self.session.query(Base" + self.__class__.__name__ + ").first()"
+        mstr = "self.session.query(Base" + self.modelname + ").first()"
         print " -- ", mstr
         res= eval(mstr)
         #for elem in res:

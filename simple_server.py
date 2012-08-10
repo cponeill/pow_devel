@@ -48,10 +48,10 @@ def powapp_simple_server(environ, start_response):
     # (Same as for apache the declarations in the httpd.conf file
     #
     # redirect static media from the meta link static to the real source dir
-    # advantage is: you can alway refer safely to /static/<something> inside your css o .tmpl
+    # advantage is: you can alway refer safely to /static/<something> inside your css or .tmpl
     # files and the real source can be anywhere. sometimes the real static source differs from
-    # prod-webserver A to prod-webserver B. with this litte tirck you can leave your links unchanged.
-    # for apache the redirection is done in http.conf
+    # prod-webserver A to prod-webserver B. with this litte trick you can leave your links unchanged.
+    # for apache the redirection is done in http.conf (so pow_router.wsgi doesn't have this section)
     alias_dict ={    
         "/static/css/"             :    "./public/css/",
         "/static/stylesheets/"     :    "./public/css/",
@@ -123,7 +123,11 @@ def powapp_simple_server(environ, start_response):
             pinfo = string.replace(pinfo,elem, alias_dict[elem])
     
     environ["PATH_INFO"] = pinfo
-    
+    #
+    # simple_server only handles some common Mime-types
+    # if you need other, specific ones just add them here
+    # for static files.
+    # 
     if found_static == True:
         print "-- Static REQUEST --------------------------------------------------------- "
         non_binary = [".css", ".html",".js",".tmpl"]
@@ -158,7 +162,8 @@ def powapp_simple_server(environ, start_response):
         
     print "-- Dynamic REQUEST --------------------------------------------------------- "
     if MODE > MODE_INFO :
-        print "Request: " + environ["REQUEST_METHOD"] + " " + environ["PATH_INFO"] + " " + environ["SERVER_PROTOCOL"] + " " + environ["QUERY_STRING"]    
+        print "Request: " + environ["REQUEST_METHOD"] + " " + environ["PATH_INFO"],
+        print environ["SERVER_PROTOCOL"] + " " + environ["QUERY_STRING"]    
         print "PATH_INFO before: ", pinfo_before
         print "PATH_INFO after: ", pinfo
         
@@ -170,7 +175,9 @@ def powapp_simple_server(environ, start_response):
     powdict["SCRIPT_FILENAME"] = environ.get("SCRIPT_FILENAME")
     powdict["SCRIPT_DIR"] = os.path.dirname(environ.get("SCRIPT_FILENAME"))
     powdict["SCRIPT_VIEWS_DIR"] = os.path.abspath(os.path.join(os.path.dirname(environ.get("SCRIPT_FILENAME")) + "/views/"))
-    # PATH_INFO contains the path beginning from the app-root url.     # first part is the controller,      # second part is the action
+    # PATH_INFO contains the path beginning from the app-root url.     
+    # first part is the controller,      
+    # second part is the action
     powdict["PATH_INFO"] = environ.get("PATH_INFO")
     #print os.path.split(powdict["PATH_INFO"])
     powdict["ENVIRON"] = pow_web_lib.show_environ( environ )
@@ -190,7 +197,7 @@ def powapp_simple_server(environ, start_response):
     action = powdict["ACTION"] = pathdict["action"]
     powdict["PATHDICT"]=pathdict
 
-    #TO_DO: include the real, mod re based routing instead of seting it hard to user/list here.
+    #TO_DO: include the real, mod re based routing instead of setting it hard to user/list here.
     if controller == "":
         defroute = pow.routes["default"]
         #defroute = powlib.readconfig("pow.cfg","routes","default")
@@ -227,6 +234,7 @@ def powapp_simple_server(environ, start_response):
     # Now really execute the action
     #
     if hasattr( aclass, action ):
+        #TODO: this should be handled by getattr instead of the ugly eval ;)
         real_action = eval("aclass." + action)  
         output.append(real_action(powdict).encode(pow.global_conf["DEFAULT_ENCODING"]))
     else:
